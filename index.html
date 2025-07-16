@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Snake Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      text-align: center;
+    }
+    #game-board {
+      border: 2px solid #0f0;
+      background-color: #111;
+      margin: 20px auto;
+      display: block;
+    }
+    #score {
+      font-size: 1.5rem;
+      margin-top: 15px;
+    }
+    .btn-group {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <h1 class="text-success mb-3">Snake Game</h1>
+    <canvas id="game-board" width="400" height="400"></canvas>
+    <div id="score" class="text-info">Score: 0</div>
+    <div class="btn-group">
+      <button class="btn btn-success" onclick="startGame()">Restart</button>
+      <button class="btn btn-warning" onclick="togglePause()" id="pauseBtn">Pause</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game-board');
+    const ctx = canvas.getContext('2d');
+    const box = 20;
+    let score = 0;
+    let direction = 'RIGHT';
+    let isPaused = false;
+
+    let snake = [{ x: 5 * box, y: 5 * box }];
+    let food = {
+      x: Math.floor(Math.random() * 20) * box,
+      y: Math.floor(Math.random() * 20) * box
+    };
+
+    document.addEventListener('keydown', changeDirection);
+
+    function changeDirection(event) {
+      if (event.key === "ArrowUp" && direction !== 'DOWN') direction = 'UP';
+      else if (event.key === "ArrowDown" && direction !== 'UP') direction = 'DOWN';
+      else if (event.key === "ArrowLeft" && direction !== 'RIGHT') direction = 'LEFT';
+      else if (event.key === "ArrowRight" && direction !== 'LEFT') direction = 'RIGHT';
+    }
+
+    function draw() {
+      if (isPaused) return;
+
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? '#0f0' : '#0b0';
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      }
+
+      ctx.fillStyle = '#f00';
+      ctx.fillRect(food.x, food.y, box, box);
+
+      let head = { x: snake[0].x, y: snake[0].y };
+
+      if (direction === 'UP') head.y -= box;
+      else if (direction === 'DOWN') head.y += box;
+      else if (direction === 'LEFT') head.x -= box;
+      else if (direction === 'RIGHT') head.x += box;
+
+      // Game Over
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height ||
+        collision(head, snake)
+      ) {
+        clearInterval(game);
+        alert("Game Over! Your Score: " + score);
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById('score').innerText = "Score: " + score;
+        food = {
+          x: Math.floor(Math.random() * 20) * box,
+          y: Math.floor(Math.random() * 20) * box
+        };
+      } else {
+        snake.pop();
+      }
+    }
+
+    function collision(head, array) {
+      for (let i = 0; i < array.length; i++) {
+        if (head.x === array[i].x && head.y === array[i].y) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    let game;
+
+    function startGame() {
+      snake = [{ x: 5 * box, y: 5 * box }];
+      direction = 'RIGHT';
+      score = 0;
+      isPaused = false;
+      document.getElementById('score').innerText = "Score: 0";
+      document.getElementById('pauseBtn').innerText = "Pause";
+      food = {
+        x: Math.floor(Math.random() * 20) * box,
+        y: Math.floor(Math.random() * 20) * box
+      };
+      clearInterval(game);
+      game = setInterval(draw, 150); // ⏱️ Slower speed
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      document.getElementById('pauseBtn').innerText = isPaused ? "Resume" : "Pause";
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
+
